@@ -9,11 +9,11 @@ import asyncio
 import subprocess
 from datetime import datetime
 
-API_ID = input("Enter API_ID: ")
-API_HASH = input("Enter API_HASH: ")
+API_ID = input("Введи API_ID: ")
+API_HASH = input("Введи API_HASH: ")
 BOT_NAME = "NewEra"
 PREFIX = "."
-OWNER_ID = int(input("Enter OWNER_ID: "))
+OWNER_ID = int(input("Это айди телеграмма | OWNER_ID: "))
 
 logging.basicConfig(filename="newera.log", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(BOT_NAME)
