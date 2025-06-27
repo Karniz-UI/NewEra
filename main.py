@@ -173,8 +173,7 @@ async def lm_command(event):
         if not message.file or not message.file.name.endswith(".py"):
             await message.edit("<b>Ошибка</b>: Прикрепите файл .py!", parse_mode="html")
             return
-        module_name = message.file.name.replace(".p
-y", "").lower()
+        module_name = message.file.name.replace(".py", "").lower()
         await message.download_media(f"modules/{module_name}.py")
         module = importlib.import_module(f"modules.{module_name}")
         client.active_modules[module_name] = True
@@ -185,7 +184,7 @@ y", "").lower()
     except Exception as e:
         await message.edit(f"<b>Ошибка</b>: {e}", parse_mode="html")
         logger.error(f"Ошибка команды .lm: {e}")
-
+        
 @client.on(events.NewMessage(outgoing=True, pattern=r"^\.ulm($| .*)"))
 async def ulm_command(event):
     message = event.message
