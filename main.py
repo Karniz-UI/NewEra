@@ -7,13 +7,62 @@ import glob
 import time
 import asyncio
 import subprocess
+import json
 from datetime import datetime
 
-API_ID = input("Введи API_ID: ")
-API_HASH = input("Введи API_HASH: ")
+def display_api_id():
+    art = """
+       /\\
+      /  \\
+     /    \\
+    /______\\
+    |  ***  | 
+    |  ***  | 
+  ==|_______|==
+  ||  ***  ||
+  ||  ***  ||
+  ||_______||
+  Введи API ID:
+    """
+    return input(art)
+
+def display_api_hash():
+    art = """
+       /\\
+      /  \\
+     /    \\
+    /______\\
+    |  ***  | 
+    |  ***  | 
+  ==|_______|==
+  ||  ***  ||
+  ||  ***  ||
+  ||_______||
+  Введи API HASH:
+    """
+    return input(art)
+
+def display_owner_id():
+    art = """
+       /\\
+      /  \\
+     /    \\
+    /______\\
+    |  ***  | 
+    |  ***  | 
+  ==|_______|==
+  ||  ***  ||
+  ||  ***  ||
+  ||_______||
+  Введи OWNER ID:
+    """
+    return input(art)
+
+API_ID = display_api_id()
+API_HASH = display_api_hash()
 BOT_NAME = "NewEra"
 PREFIX = "."
-OWNER_ID = int(input("Это айди телеграмма | OWNER_ID: "))
+OWNER_ID = int(display_owner_id())
 
 logging.basicConfig(filename="newera.log", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(BOT_NAME)
@@ -25,12 +74,26 @@ client.security_rules = {}
 client.owner_id = OWNER_ID
 client.start_time = time.time()
 
+def save_modules_state():
+    with open("modules.json", "w") as f:
+        json.dump(client.active_modules, f)
+
+def load_modules_state():
+    try:
+        with open("modules.json", "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
 def load_modules():
+    client.active_modules = load_modules_state()
     module_files = glob.glob("modules/*.py")
     for module_file in module_files:
         if module_file.endswith("__init__.py"):
             continue
         module_name = os.path.basename(module_file).replace(".py", "").lower()
+        if module_name in client.active_modules and not client.active_modules[module_name]:
+            continue
         try:
             module = importlib.import_module(f"modules.{module_name}")
             client.active_modules[module_name] = True
@@ -39,6 +102,7 @@ def load_modules():
             logger.info(f"Модуль {module_name} успешно загружен")
         except Exception as e:
             logger.error(f"Ошибка загрузки модуля {module_name}: {e}")
+    save_modules_state()
 
 @client.on(events.NewMessage(outgoing=True, pattern=r"^\.help($| .*)"))
 async def help_command(event):
@@ -123,6 +187,7 @@ async def cfg_command(event):
             return
         state = args[2].lower() == "on"
         client.active_modules[module_name] = state
+        save_modules_state()
         await message.edit(f"<b>Модуль {module_name.capitalize()} {'включён' if state else 'выключен'}</b>", parse_mode="html")
         logger.info(f"Модуль {module_name} {'включён' if state else 'выключен'} пользователем {message.sender_id}")
     except Exception as e:
@@ -151,6 +216,7 @@ async def dlm_command(event):
             client.active_modules[module_name] = True
             client.modules_help[module_name] = getattr(module, "commands", {})
             asyncio.create_task(module.init(client, PREFIX))
+            save_modules_state()
             await message.edit(f"<b>Модуль {module_name.capitalize()} загружен</b>", parse_mode="html")
             logger.info(f"Модуль {module_name} загружен пользователем {message.sender_id}")
         else:
@@ -170,21 +236,25 @@ async def lm_command(event):
         await message.edit("<b>Ошибка</b>: Только админ может использовать эту команду!", parse_mode="html")
         return
     try:
-        if not message.file or not message.file.name.endswith(".py"):
-            await message.edit("<b>Ошибка</b>: Прикрепите файл .py!", parse_mode="html")
+        target_message = message
+        if message.is_reply:
+            target_message = await message.get_reply_message()
+        if not target_message.file or not target_message.file.name.endswith(".py"):
+            await message.edit("<b>Ошибка</b>: Ответьте на сообщение с файлом .py или прикрепите файл .py!", parse_mode="html")
             return
-        module_name = message.file.name.replace(".py", "").lower()
-        await message.download_media(f"modules/{module_name}.py")
+        module_name = target_message.file.name.replace(".py", "").lower()
+        await target_message.download_media(f"modules/{module_name}.py")
         module = importlib.import_module(f"modules.{module_name}")
         client.active_modules[module_name] = True
         client.modules_help[module_name] = getattr(module, "commands", {})
         asyncio.create_task(module.init(client, PREFIX))
+        save_modules_state()
         await message.edit(f"<b>Модуль {module_name.capitalize()} загружен</b>", parse_mode="html")
         logger.info(f"Модуль {module_name} загружен из файла пользователем {message.sender_id}")
     except Exception as e:
         await message.edit(f"<b>Ошибка</b>: {e}", parse_mode="html")
         logger.error(f"Ошибка команды .lm: {e}")
-        
+
 @client.on(events.NewMessage(outgoing=True, pattern=r"^\.ulm($| .*)"))
 async def ulm_command(event):
     message = event.message
@@ -203,6 +273,7 @@ async def ulm_command(event):
         module_name = args[1].lower()
         if module_name in client.active_modules:
             client.active_modules[module_name] = False
+            save_modules_state()
             await message.edit(f"<b>Модуль {module_name.capitalize()} выгружен</b>", parse_mode="html")
             logger.info(f"Модуль {module_name} выгружен пользователем {message.sender_id}")
         else:
