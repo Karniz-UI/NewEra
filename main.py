@@ -82,7 +82,7 @@ def load_modules_state():
     try:
         with open("modules.json", "r") as f:
             return json.load(f)
-    except FileNotFoundError:
+    except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
 def load_modules():
@@ -516,46 +516,45 @@ async def session_command(event):
     message = event.message
     user_id = str(message.sender_id)
     if user_id in client.security_rules and "session" in client.security_rules[user_id]["commands"] and (client.security_rules[user_id]["until"] is None or client.security_rules[user_id]["until"] > time.time()):
-        await message.edit("<b>Ошибка</b>: Доступ к команде .session запрещён!", parse_mode="html")
-        return
-    if message.sender_id != client.owner_id:
-        await message.edit("<b>Ошибка</b>: Только админ может использовать эту команду!", parse_mode="html")
-        return
-    try:
-        args = message.text.split()
-        if len(args) < 2:
-            session_text = (
-                "<b>Управление сессией</b>\n"
-                "──────────────────\n"
-                "<b>Команды</b>:\n"
-                "<code>.session generate</code> — Сгенерировать новую сессию\n"
-                "<code>.session delete</code> — Удалить текущую сессию\n"
-                "──────────────────\n"
-                "<b>Осторожно</b>"
-            )
-            await message.edit(session_text, parse_mode="html")
-            return
-        action = args[1].lower()
-        if action == "generate":
-            new_session = TelegramClient(f"NewEra_{int(time.time())}", api_id=API_ID, api_hash=API_HASH)
-            await new_session.connect()
-            await message.edit("<b>Новая сессия сгенерирована! Проверьте файл сессии.</b>", parse_mode="html")
-            logger.info(f"Новая сессия сгенерирована пользователем {message.sender_id}")
-        elif action == "delete":
-            os.remove("NewEra.session")
-            await message.edit("<b>Сессия удалена! Перезапустите бота.</b>", parse_mode="html")
-            logger.info(f"Сессия удалена пользователем {message.sender_id}")
-        else:
-            await message.edit("<b>Использование</b>: <code>.session <generate/delete></code>", parse_mode="html")
-    except Exception as e:
-        await message.edit(f"<b>Ошибка</b>: {e}", parse_mode="html")
-        logger.error(f"Ошибка команды .session: {e}")
-
-async def main():
-    await client.start()
-    load_modules()
-    logger.info("Бот запущен")
-    await client.run_until_disconnected()
-
-if __name__ == "__main__":
+        await message.edit("<b>Ошибка</b>: Доступ к команде .session запрещён!", HegemonyBot: Signed in successfully as ᴄᴨᴇᴋᴛᴏʙ ● #NewEraBot #H1llBot #reCode; remember to not break the ToS or you will risk an account ban!
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/NewEra/main.py", line 561, in <module>
     asyncio.run(main())
+  File "/data/data/com.termux/files/usr/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/home/NewEra/main.py", line 556, in main
+    await client.start()
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/telethon/client/auth.py", line 188, in start
+    await self.sign_in(phone=phone, code=code, password=password)
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/telethon/client/auth.py", line 64, in sign_in
+    result = await self(SignInRequest(phone, code, phone_code_hash=phone_code_hash))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/telethon/client/telegrambaseclient.py", line 340, in __call__
+    return await self._call(self._sender, request, ordered=ordered)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/telethon/client/telegrambaseclient.py", line 453, in _call
+    result = await request.execute(sender)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/telethon/requestiter.py", line 79, in execute
+    result = await sender.send(request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/telethon/network/mtproto_sender.py", line 273, in send
+    result = await future
+             ^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/telethon/network/mtproto_sender.py", line 180, in _send_loop
+    await self._connect()
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/telethon/network/mtproto_sender.py", line 132, in _connect
+    await self._connection.connect()
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/telethon/network/connection/tcp_full.py", line 50, in connect
+    await self._reader.connect(self._ip, self._port, timeout=timeout)
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/telethon/network/connection/tcpabridged.py", line 30, in connect
+    self._socket = await asyncio.wait_for(
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+asyncio.exceptions.CancelledError
